@@ -1,0 +1,30 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="naturesmp:jar">
+    <output-path>$USER_HOME$/AppData/Roaming/.feather/player-server/servers/e5479b9a-27b4-4a85-a88e-573b0173587a/plugins/artifacts/naturesmp_jar</output-path>
+    <root id="archive" name="naturesmp.jar">
+      <element id="module-output" name="naturesmp" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/fr/skytasul/reflection-remapper/1.0.0/reflection-remapper-1.0.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/github/KodySimpson/SimpAPI/4.6.1/SimpAPI-4.6.1.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/fr/skytasul/guardianbeam/2.4.0/guardianbeam-2.4.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/code/gson/gson/2.11.0/gson-2.11.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-core/2.13.4/jackson-core-2.13.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/google/errorprone/error_prone_annotations/2.27.0/error_prone_annotations-2.27.0.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-annotations/2.13.4/jackson-annotations-2.13.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/core/jackson-databind/2.13.4.2/jackson-databind-2.13.4.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/com/fasterxml/jackson/dataformat/jackson-dataformat-yaml/2.12.4/jackson-dataformat-yaml-2.12.4.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/yaml/snakeyaml/2.2/snakeyaml-2.2.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$MAVEN_REPOSITORY$/org/jetbrains/annotations/21.0.1/annotations-21.0.1.jar" path-in-jar="/" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-annotations:2.13.4" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-databind:2.13.4.2" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.12.4" />
+      <element id="library" level="project" name="Maven: com.github.KodySimpson:SimpAPI:4.6.1" />
+      <element id="library" level="project" name="Maven: com.fasterxml.jackson.core:jackson-core:2.13.4" />
+      <element id="library" level="project" name="Maven: com.google.errorprone:error_prone_annotations:2.27.0" />
+      <element id="library" level="project" name="Maven: fr.skytasul:guardianbeam:2.4.0" />
+      <element id="library" level="project" name="Maven: fr.skytasul:reflection-remapper:1.0.0" />
+      <element id="library" level="project" name="Maven: org.jetbrains:annotations:21.0.1" />
+      <element id="library" level="project" name="Maven: com.google.code.gson:gson:2.11.0" />
+      <element id="library" level="project" name="Maven: org.yaml:snakeyaml:2.2" />
+    </root>
+  </artifact>
+</component>

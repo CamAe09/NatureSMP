@@ -1,0 +1,26 @@
+name: naturesmp
+version: '${project.version}'
+main: com.itsisaacio.natureSMP.NatureSMP
+api-version: '1.21'
+authors: [ItsIsaacIO]
+description: mobs smp fr
+
+commands:
+  entrail:
+    description: Sets a player's entrail.
+  withdraw:
+    description: Withdraw an energy core.
+  rprimary:
+    description: Primary Entrail ability.
+  rsecondary:
+    description: Secondary Entrail ability.
+  reroll:
+    description: Re-roll's a player's entrail.
+  stat:
+    description: Sets a player's statistic.
+  cooldown_reload:
+    description: Reset all cooldowns.
+  give_item:
+    description: Give a special item.
+  energy:
+    description: View your energy count.
