@@ -1,7 +1,6 @@
 package com.itsisaacio.natureSMP;
 
-import com.itsisaacio.natureSMP.commands.TrustAddCommand;
-import com.itsisaacio.natureSMP.commands.TrustRemoveCommand;
+
 import com.itsisaacio.natureSMP.custom.Energizer;
 import com.itsisaacio.natureSMP.entrails.classes.Blazeborne;
 import com.itsisaacio.natureSMP.entrails.classes.Frosted;
@@ -19,9 +18,7 @@ import com.itsisaacio.natureSMP.ui.EntrailSwapper;
 import com.itsisaacio.natureSMP.commands.CommandHandler;
 import com.itsisaacio.natureSMP.saveData.ServerData;
 import com.itsisaacio.natureSMP.saveData.ServerSave;
-import me.kodysimpson.simpapi.command.CommandManager;
-import me.kodysimpson.simpapi.command.SubCommand;
-import me.kodysimpson.simpapi.menu.MenuManager;
+
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentBuilder;
@@ -81,15 +78,7 @@ public final class NatureSMP extends JavaPlugin {
         }
     }
 
-    @SafeVarargs
-    public final void makeCommand(String name, String desc, String usage, Class<? extends SubCommand>... commands)
-    {
-        try {
-            CommandManager.createCoreCommand(this, name, desc, usage, null, commands);
-        } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    
 
     private static final Logger log = Logger.getLogger("Minecraft");
     final String font = "naturesmp:";
@@ -105,7 +94,6 @@ public final class NatureSMP extends JavaPlugin {
         setupCommands(new String[]{
                 "rprimary",
                 "rsecondary",
-
                 "entrail",
                 "withdraw",
                 "energy",
@@ -113,18 +101,18 @@ public final class NatureSMP extends JavaPlugin {
                 "stat",
                 "give_item",
                 "cooldown_reload",
-                "phase",
+                "phase"
         });
 
-        makeCommand("trust", "Used to handle trusted players.", "/trust", TrustAddCommand.class, TrustRemoveCommand.class);
-        //makeCommand("energy", "Used to handle player's energy.", "/energy", EnergySetCommand.class);
+        // Register trust command normally
+        Objects.requireNonNull(getCommand("trust")).setExecutor(new CommandHandler());
+        Objects.requireNonNull(getCommand("trust")).setTabCompleter(new CommandHandler());
 
         PluginManager manager = getServer().getPluginManager();
         manager.registerEvents(new MainEvents(), this);
         manager.registerEvents(new BlockEvents(), this);
         manager.registerEvents(new EntrailEvents(), this);
         manager.registerEvents(new PortalEvents(), this);
-        MenuManager.setup(getServer(), this);
 
         //manager.registerEvents(new RecipeManager(), this);
         //RecipeManager.loadRecipes();
@@ -135,9 +123,15 @@ public final class NatureSMP extends JavaPlugin {
         for (Player player : Bukkit.getServer().getOnlinePlayers()) {
             updateItems(player);
 
-            // Only auto-reroll if not in an active phase and config allows it
-            if (getConfig().getBoolean("auto_reroll_on_join", true) && !PhaseManager.isPhaseActive()) {
-                getEntrailSwapper().randomize(player);
+            // Only auto-assign entrail if phase 1 has been started at least once
+            if (PhaseManager.getCurrentPhase() >= 1 || PhaseManager.hasPhaseRerollCompleted()) {
+                // Auto-assign entrail if player doesn't have one
+                if (getEntrail(player).getName().equals("None")) {
+                    getEntrailSwapper().randomize(player);
+                } else if (getConfig().getBoolean("auto_reroll_on_join", true) && !PhaseManager.isPhaseActive()) {
+                    // Only auto-reroll if not in an active phase and config allows it
+                    getEntrailSwapper().randomize(player);
+                }
             }
         }
 

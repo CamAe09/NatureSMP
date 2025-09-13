@@ -44,12 +44,9 @@ public abstract class BaseEntrail {
         return PhaseManager.isPhaseActive() && PhaseManager.getCurrentPhase() == 1;
     }
 
-    protected boolean checkPhase1Restriction(Player player, int energyCost) {
-        if (PhaseManager.getCurrentPhase() == 1) {
-            // Give energy back
-            int currentEnergy = player.getPersistentDataContainer().getOrDefault(Keys.energyKey, PersistentDataType.INTEGER, 0);
-            player.getPersistentDataContainer().set(Keys.energyKey, PersistentDataType.INTEGER, currentEnergy + energyCost);
-
+    protected boolean checkPhase1Restriction(Player player, int abilityType) {
+        // Block second ability (type 1) during phase 1
+        if (PhaseManager.getCurrentPhase() == 1 && PhaseManager.isPhaseActive() && abilityType == 1) {
             player.sendMessage("§cYou Are Not Allowed To Use This During Phase 1");
             return true; // Blocked
         }

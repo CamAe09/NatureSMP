@@ -124,6 +124,8 @@ public class BlockEvents implements Listener {
                 center.setGravity(false);
                 center.setNoPhysics(true);
                 center.setCollidable(false);
+                center.setPersistent(true);
+                center.setRemoveWhenFarAway(false);
 
                 timer.getWorld().playSound(timer.getLocation(), Sound.BLOCK_END_PORTAL_SPAWN, 1, 1);
 
@@ -150,8 +152,19 @@ public class BlockEvents implements Listener {
                     @Override
                     public void run()
                     {
-                        if (!center.isValid() || center.isDead() || !Players.entityValid(player))
+                        if (!center.isValid() || center.isDead() || !Players.entityValid(player) || !player.isOnline())
                         {
+                            // Debug: Log why the ritual was canceled
+                            if (!center.isValid()) {
+                                player.sendMessage("§cRitual canceled: Center entity is invalid");
+                            } else if (center.isDead()) {
+                                player.sendMessage("§cRitual canceled: Center entity died");
+                            } else if (!Players.entityValid(player)) {
+                                player.sendMessage("§cRitual canceled: Player is not valid");
+                            } else if (!player.isOnline()) {
+                                player.sendMessage("§cRitual canceled: Player went offline");
+                            }
+                            
                             NatureSMP.ON_SHUTDOWN.remove(reset);
                             reset.run();
 

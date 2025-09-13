@@ -60,11 +60,16 @@ public class MainEvents implements Listener {
 
         NatureSMP.updateItems(player);
 
-        // Auto-reroll if phase is active and config allows it
-        if (PhaseManager.isPhaseActive() && NatureSMP.NATURE.getConfig().getBoolean("auto_reroll_on_join", true)) {
-            NatureSMP.NATURE.delay(() -> {
-                EntrailSwapper.randomize(player);
-            }, 20); // 1 second delay
+        // Only auto-assign entrail if phase 1 has been started at least once
+        // This prevents players from getting entrails before the game officially begins
+        if (PhaseManager.getCurrentPhase() >= 1 || PhaseManager.hasPhaseRerollCompleted()) {
+            // Auto-assign entrail if player doesn't have one
+            if (NatureSMP.getEntrail(player).getName().equals("None")) {
+                NatureSMP.NATURE.getEntrailSwapper().randomize(player);
+            } else if (NatureSMP.NATURE.getConfig().getBoolean("auto_reroll_on_join", true) && !PhaseManager.isPhaseActive()) {
+                // Only auto-reroll if not in an active phase and config allows it
+                NatureSMP.NATURE.getEntrailSwapper().randomize(player);
+            }
         }
     }
 

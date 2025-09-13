@@ -84,7 +84,7 @@ public class Naturen extends BaseEntrail {
             return;
         }
 
-        if (!checkPhase1Restriction(player, type)) {
+        if (checkPhase1Restriction(player, type)) {
             return;
         }
 
@@ -146,10 +146,12 @@ public class Naturen extends BaseEntrail {
                             cancel();
                             return;
                         }
-                        if (loop++ % 4 == 0)
+                        if (loop++ % 2 == 0)
                         {
-                            Location leafLocation = location[1];
-                            player.getWorld().spawnParticle(Particle.DUST, leafLocation, 1, 0, 0, 0, new Particle.DustOptions(Color.GREEN, 1));
+                            Location leafLocation = location[1].clone();
+                            leafLocation.subtract(eye.getDirection().multiply(dist[0]));
+                            player.getWorld().spawnParticle(Particle.DUST, leafLocation, 2, 0.1, 0.1, 0.1, new Particle.DustOptions(Color.GREEN, 1));
+                            player.getWorld().spawnParticle(Particle.FALLING_SPORE_BLOSSOM, leafLocation, 1, 0.1, 0.1, 0.1, 0);
                         }
 
                         finalEntity.getWorld().playSound(finalEntity.getLocation(), Sound.BLOCK_MOSS_CARPET_STEP, 1, 0.5f);
@@ -164,7 +166,7 @@ public class Naturen extends BaseEntrail {
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_SPIDER_AMBIENT, 1, 1);
 
             int delay = 2;
-            int duration = 30;
+            int duration = 10;
 
             EntrailEvents.LEECH.add(player);
 
@@ -236,6 +238,7 @@ public class Naturen extends BaseEntrail {
 
     @Override
     public void secondary(Player player) {
-        if (checkPhase1Restriction(player, 2)) return;
+        if (checkPhase1Restriction(player, 1)) return;
+        // Secondary method implementation here if needed
     }
 }

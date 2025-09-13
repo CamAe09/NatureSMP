@@ -67,7 +67,7 @@ public class Shaded extends BaseEntrail {
     @Override
     public Effect[] getEffects() {
         return new Effect[] {
-                new Effect(PotionEffectType.INVISIBILITY, 0),
+
         };
     }
 
@@ -92,7 +92,7 @@ public class Shaded extends BaseEntrail {
             return;
         }
 
-        if (!checkPhase1Restriction(player, type)) {
+        if (checkPhase1Restriction(player, type)) {
             return;
         }
 
@@ -219,6 +219,7 @@ public class Shaded extends BaseEntrail {
 
     @Override
     public void secondary(Player player) {
-        if (checkPhase1Restriction(player, 2)) return;
+        if (checkPhase1Restriction(player, 1)) return;
+        // Secondary method implementation here if needed
     }
 }

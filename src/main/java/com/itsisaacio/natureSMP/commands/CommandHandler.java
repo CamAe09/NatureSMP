@@ -10,6 +10,8 @@ import com.itsisaacio.natureSMP.entrails.classes.ResetEntrail;
 import com.itsisaacio.natureSMP.entrails.EntrailList;
 import com.itsisaacio.natureSMP.entrails.BaseEntrail;
 import com.itsisaacio.natureSMP.ui.EntrailSwapper;
+import com.itsisaacio.natureSMP.saveData.PlayerData;
+import com.itsisaacio.natureSMP.saveData.PlayerSave;
 import com.itsisaacio.natureSMP.Keys;
 import org.bukkit.*;
 import org.bukkit.command.Command;
@@ -127,6 +129,18 @@ public class CommandHandler implements TabCompleter, CommandExecutor {
                     player.sendMessage("You now have §a" + (energy - 1) + "§b energy§f!");
                 }
                 else player.sendMessage("You need energy to do this!");
+            } else if (cmdName.equals("trust")) {
+                if (args.length == 0) {
+                    player.sendMessage("§cUsage: /trust <add|remove> <player>");
+                } else if (args[0].equalsIgnoreCase("add") && args.length == 2) {
+                    handleTrustAdd(player, args[1]);
+                } else if (args[0].equalsIgnoreCase("remove") && args.length == 2) {
+                    handleTrustRemove(player, args[1]);
+                } else if (args[0].equalsIgnoreCase("list")) {
+                    handleTrustList(player);
+                } else {
+                    player.sendMessage("§cUsage: /trust <add|remove|list> <player>");
+                }
             }
         }
 
@@ -204,6 +218,15 @@ public class CommandHandler implements TabCompleter, CommandExecutor {
                     PhaseItemCommand itemCommand = new PhaseItemCommand();
                     return itemCommand.onTabComplete(sender, command, alias, args);
                 }
+            } else if (command.getName().equalsIgnoreCase("trust")) {
+                if (args.length == 1) {
+                    suggestions.add("add");
+                    suggestions.add("remove");
+                    suggestions.add("list");
+                    suggestions = getAutofill(args, 0, suggestions);
+                } else if (args.length == 2 && (args[0].equalsIgnoreCase("add") || args[0].equalsIgnoreCase("remove"))) {
+                    playerListIndex = 1;
+                }
             }
         }
 
@@ -211,5 +234,89 @@ public class CommandHandler implements TabCompleter, CommandExecutor {
             suggestions = getAutofill(args, playerListIndex, null);
 
         return suggestions;
+    }
+
+    private void handleTrustAdd(Player player, String targetName) {
+        Player target = Bukkit.getServer().getPlayer(targetName);
+        if (target == null) {
+            player.sendMessage("§cPlayer '" + targetName + "' is not online!");
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 0.1f);
+            return;
+        }
+
+        if (target.equals(player)) {
+            player.sendMessage("§cYou cannot trust yourself!");
+            return;
+        }
+
+        PlayerData data = PlayerSave.getData(player);
+        if (data == null) {
+            ArrayList<String> trusted = new ArrayList<>();
+            trusted.add(target.getUniqueId().toString());
+            PlayerSave.createData(player, trusted);
+            player.sendMessage("§a" + target.getName() + " has been trusted!");
+            target.sendMessage("§a" + player.getName() + " has trusted you!");
+        } else {
+            ArrayList<String> trusted = data.getTrusted();
+            if (trusted.contains(target.getUniqueId().toString())) {
+                player.sendMessage("§c" + target.getName() + " is already trusted!");
+                return;
+            }
+            trusted.add(target.getUniqueId().toString());
+            data.setTrusted(trusted);
+            PlayerSave.updateData(player, data);
+            player.sendMessage("§a" + target.getName() + " has been trusted!");
+            target.sendMessage("§a" + player.getName() + " has trusted you!");
+        }
+        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1, 1);
+    }
+
+    private void handleTrustRemove(Player player, String targetName) {
+        Player target = Bukkit.getServer().getPlayer(targetName);
+        if (target == null) {
+            player.sendMessage("§cPlayer '" + targetName + "' is not online!");
+            player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1, 0.1f);
+            return;
+        }
+
+        PlayerData data = PlayerSave.getData(player);
+        if (data == null || data.getTrusted().isEmpty()) {
+            player.sendMessage("§cYou don't have any trusted players!");
+            return;
+        }
+
+        ArrayList<String> trusted = data.getTrusted();
+        if (!trusted.contains(target.getUniqueId().toString())) {
+            player.sendMessage("§c" + target.getName() + " is not trusted!");
+            return;
+        }
+
+        trusted.remove(target.getUniqueId().toString());
+        data.setTrusted(trusted);
+        PlayerSave.updateData(player, data);
+        player.sendMessage("§c" + target.getName() + " has been untrusted!");
+        target.sendMessage("§c" + player.getName() + " has untrusted you!");
+        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
+    }
+
+    private void handleTrustList(Player player) {
+        PlayerData data = PlayerSave.getData(player);
+        if (data == null || data.getTrusted().isEmpty()) {
+            player.sendMessage("§eYou don't have any trusted players.");
+            return;
+        }
+
+        player.sendMessage("§aTrusted players:");
+        ArrayList<String> trusted = data.getTrusted();
+        for (String uuid : trusted) {
+            Player trustedPlayer = Bukkit.getPlayer(java.util.UUID.fromString(uuid));
+            if (trustedPlayer != null) {
+                player.sendMessage("§f- " + trustedPlayer.getName() + " §a(online)");
+            } else {
+                // Try to get offline player name
+                OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(java.util.UUID.fromString(uuid));
+                player.sendMessage("§f- " + offlinePlayer.getName() + " §7(offline)");
+            }
+        }
     }
 }
