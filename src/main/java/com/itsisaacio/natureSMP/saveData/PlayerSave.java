@@ -2,6 +2,7 @@ package com.itsisaacio.natureSMP.saveData;
 
 import com.google.gson.Gson;
 import com.itsisaacio.natureSMP.NatureSMP;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.io.*;
@@ -94,5 +95,13 @@ public class PlayerSave {
                 error.printStackTrace();
             }
         }
+    }
+
+    public static Location getPlayerLocation(Player player) {
+        return null;
+    }
+
+    public static void setPlayerLocation(Player player, Location currentLocation) {
+
     }
 }

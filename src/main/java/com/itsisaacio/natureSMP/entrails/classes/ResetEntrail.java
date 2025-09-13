@@ -38,4 +38,9 @@ public class ResetEntrail extends BaseEntrail {
 
     @Override
     public void perform(Player player, int type) {}
+
+    @Override
+    public void secondary(Player player) {
+
+    }
 }

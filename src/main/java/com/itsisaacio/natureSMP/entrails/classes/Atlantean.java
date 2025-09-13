@@ -76,7 +76,11 @@ public class Atlantean extends BaseEntrail {
         {
             player.sendMessage(getColor() + getAbilities().get(type) + Players.cooldownText(player, type));
             return;
-        };
+        }
+
+        if (!checkPhase1Restriction(player, type)) {
+            return;
+        }
 
         if (type == 0) {
             Players.setCooldown(player, type, 15, true);
@@ -226,5 +230,10 @@ public class Atlantean extends BaseEntrail {
                 });
             }, 15);
         }
+    }
+
+    @Override
+    public void secondary(Player player) {
+        if (checkPhase1Restriction(player, 2)) return;
     }
 }

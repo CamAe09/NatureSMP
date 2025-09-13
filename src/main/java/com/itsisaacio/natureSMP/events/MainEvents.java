@@ -1,6 +1,7 @@
 package com.itsisaacio.natureSMP.events;
 
 import com.itsisaacio.natureSMP.NatureSMP;
+import com.itsisaacio.natureSMP.PhaseManager;
 import com.itsisaacio.natureSMP.custom.EnergyCore;
 import com.itsisaacio.natureSMP.entrails.BaseEntrail;
 import com.itsisaacio.natureSMP.ui.EntrailSwapper;
@@ -58,6 +59,13 @@ public class MainEvents implements Listener {
             data.set(Keys.energyKey, PersistentDataType.INTEGER, 3);
 
         NatureSMP.updateItems(player);
+
+        // Auto-reroll if phase is active and config allows it
+        if (PhaseManager.isPhaseActive() && NatureSMP.NATURE.getConfig().getBoolean("auto_reroll_on_join", true)) {
+            NatureSMP.NATURE.delay(() -> {
+                EntrailSwapper.randomize(player);
+            }, 20); // 1 second delay
+        }
     }
 
     @EventHandler

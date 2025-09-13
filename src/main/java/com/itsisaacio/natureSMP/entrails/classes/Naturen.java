@@ -47,7 +47,7 @@ public class Naturen extends BaseEntrail {
     @Override
     public ArrayList<String> getLore() {
         return new ArrayList<>() {{
-            add("§f  " + getColor() + getAbilities().getFirst());
+            add("§f  " + getColor() + getAbilities().get(0));
             add("§f  Gives §cplayers §caround you §bGlowing§f, and gives you");
             add("§b  Strength §a2 §fand §bSpeed §a3 §ffor §a15 §fseconds§f.");
             add("");
@@ -82,7 +82,11 @@ public class Naturen extends BaseEntrail {
         {
             player.sendMessage(getColor() + getAbilities().get(type) + Players.cooldownText(player, type));
             return;
-        };
+        }
+
+        if (!checkPhase1Restriction(player, type)) {
+            return;
+        }
 
         if (type == 0) {
             Players.setCooldown(player, type, 30, false);
@@ -144,9 +148,8 @@ public class Naturen extends BaseEntrail {
                         }
                         if (loop++ % 4 == 0)
                         {
-                            Particles.line(player.getEyeLocation(), location[1], (int) Math.ceil(dist[0]) * 3, 1,
-                                    0, 0 ,0, Particle.DUST, 0,
-                                    spot -> spot.getBlock().isPassable(), new Particle.DustOptions(Color.GREEN, 0.7f));
+                            Location leafLocation = location[1];
+                            player.getWorld().spawnParticle(Particle.DUST, leafLocation, 1, 0, 0, 0, new Particle.DustOptions(Color.GREEN, 1));
                         }
 
                         finalEntity.getWorld().playSound(finalEntity.getLocation(), Sound.BLOCK_MOSS_CARPET_STEP, 1, 0.5f);
@@ -174,8 +177,10 @@ public class Naturen extends BaseEntrail {
                     EntrailEvents.LEECH.remove(player);
                     EntrailEvents.LEECHED.remove(player);
 
-                    attached.removePassenger(leech);
-                    leech.remove();
+                    if (leech != null) {
+                        attached.removePassenger(leech);
+                        leech.remove();
+                    }
                 };
                 boolean added = false;
 
@@ -221,11 +226,16 @@ public class Naturen extends BaseEntrail {
                             int damage = 1;
                             if (player.getWorld().isDayTime()) damage = 2;
                             Players.trueDamage(attached, player, damage);
-                            player.heal(1, EntityRegainHealthEvent.RegainReason.MAGIC_REGEN);
+                            player.setHealth(Math.min(player.getHealth() + 1, player.getMaxHealth()));
                         }
                     }
                 }
             }.runTaskTimer(NatureSMP.NATURE, 0, delay);
         }
+    }
+
+    @Override
+    public void secondary(Player player) {
+        if (checkPhase1Restriction(player, 2)) return;
     }
 }

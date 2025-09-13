@@ -1,7 +1,7 @@
 package com.itsisaacio.natureSMP.utils;
 
 import com.itsisaacio.natureSMP.NatureSMP;
-import io.papermc.paper.persistence.PersistentDataContainerView;
+import org.bukkit.persistence.PersistentDataContainer;
 import me.kodysimpson.simpapi.colors.ColorTranslator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -88,7 +88,7 @@ public class Utilities {
     public static ArrayList<LivingEntity> getNearby(Location location, float range) {
         return getNearby(location, range, range, range);
     }
-    public static boolean stringIs(PersistentDataContainerView data, NamespacedKey key, String equals, String orDefault)
+    public static boolean stringIs(PersistentDataContainer data, NamespacedKey key, String equals, String orDefault)
     {
         return data.getOrDefault(key, PersistentDataType.STRING, orDefault).equalsIgnoreCase(equals);
     }

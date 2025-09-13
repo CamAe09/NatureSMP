@@ -5,14 +5,17 @@ import com.itsisaacio.natureSMP.commands.TrustRemoveCommand;
 import com.itsisaacio.natureSMP.custom.Energizer;
 import com.itsisaacio.natureSMP.entrails.classes.Blazeborne;
 import com.itsisaacio.natureSMP.entrails.classes.Frosted;
+import com.itsisaacio.natureSMP.entrails.classes.Hypnotic;
 import com.itsisaacio.natureSMP.entrails.classes.ResetEntrail;
 import com.itsisaacio.natureSMP.entrails.classes.Shaded;
 import com.itsisaacio.natureSMP.events.*;
+import com.itsisaacio.natureSMP.commands.PhaseItemCommand;
 import com.itsisaacio.natureSMP.entrails.BaseEntrail;
 import com.itsisaacio.natureSMP.entrails.Cooldowns;
 import com.itsisaacio.natureSMP.entrails.EntrailList;
 import com.itsisaacio.natureSMP.utils.*;
 import com.itsisaacio.natureSMP.saveData.PlayerSave;
+import com.itsisaacio.natureSMP.ui.EntrailSwapper;
 import com.itsisaacio.natureSMP.commands.CommandHandler;
 import com.itsisaacio.natureSMP.saveData.ServerData;
 import com.itsisaacio.natureSMP.saveData.ServerSave;
@@ -42,6 +45,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
@@ -53,6 +57,7 @@ public final class NatureSMP extends JavaPlugin {
     public static Cooldowns COOLDOWNS;
 
     public static ArrayList<Runnable> ON_SHUTDOWN = new ArrayList<>();
+    public static int phase;
 
     @Override
     public void onDisable() {
@@ -108,6 +113,7 @@ public final class NatureSMP extends JavaPlugin {
                 "stat",
                 "give_item",
                 "cooldown_reload",
+                "phase",
         });
 
         makeCommand("trust", "Used to handle trusted players.", "/trust", TrustAddCommand.class, TrustRemoveCommand.class);
@@ -117,6 +123,7 @@ public final class NatureSMP extends JavaPlugin {
         manager.registerEvents(new MainEvents(), this);
         manager.registerEvents(new BlockEvents(), this);
         manager.registerEvents(new EntrailEvents(), this);
+        manager.registerEvents(new PortalEvents(), this);
         MenuManager.setup(getServer(), this);
 
         //manager.registerEvents(new RecipeManager(), this);
@@ -125,8 +132,14 @@ public final class NatureSMP extends JavaPlugin {
         PlayerSave.loadData();
         ServerSave.loadData();
 
-        for (Player player : Bukkit.getServer().getOnlinePlayers())
+        for (Player player : Bukkit.getServer().getOnlinePlayers()) {
             updateItems(player);
+
+            // Only auto-reroll if not in an active phase and config allows it
+            if (getConfig().getBoolean("auto_reroll_on_join", true) && !PhaseManager.isPhaseActive()) {
+                getEntrailSwapper().randomize(player);
+            }
+        }
 
         NatureSMP.NATURE.delay(() -> {
             World world = Bukkit.getWorld("world");
@@ -149,8 +162,15 @@ public final class NatureSMP extends JavaPlugin {
         }, 20);
 
         new BukkitRunnable() {
+            private int tickCounter = 0; // Counter for ticking mechanics
+            private final int NAUSEA_TICK_INTERVAL = 20; // 1 second interval for nausea chance check
+            private final int HEAL_TICK_INTERVAL = 200; // 10 second interval for standing still heal check
+            private HashMap<Player, Integer> standingStillTicks = new HashMap<>(); // Track ticks player has been standing still
+
             @Override
             public void run() {
+                tickCounter++;
+
                 BlockEvents.rechargers.forEach((location, active) -> {
                     if (!active)
                     {
@@ -158,7 +178,7 @@ public final class NatureSMP extends JavaPlugin {
 
                         Location particle = location.getBlock().getLocation().add(0.5, 0.3, 0.5);
                         Particles.sphere(particle, 2.5f, 0, 20, 0, 0, alt -> {
-                            particle.getWorld().spawnParticle(Particle.TRIAL_SPAWNER_DETECTION, particle, 1, 0, 0, 0, 0);
+                            particle.getWorld().spawnParticle(Particle.TRIAL_SPAWNER_DETECTION_OMINOUS, particle, 1, 0, 0, 0, 0);
                             return true;
                         });
                     }
@@ -212,7 +232,7 @@ public final class NatureSMP extends JavaPlugin {
                         if (player.hasPotionEffect(PotionEffectType.WATER_BREATHING)
                                 && (player.getInventory().getBoots() == null || player.getInventory().getBoots().getType() == Material.AIR))
                             player.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 20, 0));
-                        if (player.hasPotionEffect(PotionEffectType.WEAVING) && player.getLocation().getBlock().getType() == Material.COBWEB && MathUtils.random.nextInt(1, 5) == 1)
+                        if (player.hasPotionEffect(PotionEffectType.WIND_CHARGED) && player.getLocation().getBlock().getType() == Material.COBWEB && MathUtils.random.nextInt(1, 5) == 1)
                             player.getLocation().getBlock().setType(Material.AIR);
                     } else if (tags.contains("Frosted")) {
                         boolean hasSpeed = speed != null && speed.getModifiers().contains(Frosted.speedMod);
@@ -228,7 +248,7 @@ public final class NatureSMP extends JavaPlugin {
                         Location location = player.getLocation();
 
                         if (player.getWorld().hasStorm() && player.getWorld().getTemperature(location.getBlockX(), location.getBlockY(), location.getBlockZ()) <= 0.15
-                            && player.getWorld().getHighestBlockAt(location).getY() < location.getY())
+                                && player.getWorld().getHighestBlockAt(location).getY() < location.getY())
                             player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, 20, 1));
                     } else if (tags.contains("Naturen")) {
                         for (Block block : BlockUtils.getNearbyBlocks(player.getLocation(), 20)) {
@@ -275,7 +295,44 @@ public final class NatureSMP extends JavaPlugin {
                     } else if (tags.contains("Ethereal")) {
                         if (!player.getWorld().isDayTime())
                             player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 20, 0));
+                    } else if (tags.contains("Hypnotic")) {
+                        // Passive 1: During nighttime, gain permanent Speed 1 and Strength 1
+                        if (!player.getWorld().isDayTime()) {
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, INFINITE_DURATION, 0));
+                            player.addPotionEffect(new PotionEffect(PotionEffectType.STRENGTH, INFINITE_DURATION, 0));
+                        } else {
+                            player.removePotionEffect(PotionEffectType.SPEED);
+                            player.removePotionEffect(PotionEffectType.STRENGTH);
+                        }
+
+                        // Passive 2: Drowsy Mind – Enemies within 5 blocks of you sometimes get Nausea for 2 seconds (1% chance per 20 tick).
+                        if (tickCounter % NAUSEA_TICK_INTERVAL == 0) { // Check every 1 second
+                            if (MathUtils.random.nextInt(100) < 1) { // 1% chance
+                                for (Entity nearbyEntity : player.getNearbyEntities(5, 5, 5)) {
+                                    if (nearbyEntity instanceof LivingEntity && nearbyEntity.getType() != EntityType.PLAYER) {
+                                        ((LivingEntity) nearbyEntity).addPotionEffect(new PotionEffect(PotionEffectType.NAUSEA, 40, 0)); // 2 seconds = 40 ticks
+                                    }
+                                }
+                            }
+                        }
+
+                        // Passive 3: Standing still for 10 seconds heals 1 heart and heals 1 hunger bar
+                        Location currentLocation = player.getLocation();
+                        Location lastLocation = PlayerSave.getPlayerLocation(player); // Assuming PlayerSave stores last known location
+
+                        if (lastLocation != null && currentLocation.distanceSquared(lastLocation) < 0.01) { // Check if player is very close to the last location
+                            standingStillTicks.put(player, standingStillTicks.getOrDefault(player, 0) + 1);
+                            if (standingStillTicks.get(player) >= 200) { // 10 seconds = 200 ticks
+                                player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 20, 0)); // Heal 1 heart
+                                player.setFoodLevel(Math.min(player.getFoodLevel() + 1, 20)); // Heal 1 hunger bar, max 20
+                                standingStillTicks.put(player, 0); // Reset counter after healing
+                            }
+                        } else {
+                            standingStillTicks.put(player, 0); // Reset counter if player moves
+                            PlayerSave.setPlayerLocation(player, currentLocation); // Update last known location
+                        }
                     }
+
 
                     if (EntrailEvents.LEECHED.containsValue(player) && player.getFireTicks() > 0)
                     {
@@ -387,6 +444,10 @@ public final class NatureSMP extends JavaPlugin {
                             }
                         }
                     }
+                    // Debuff: 1. Fragile Wakefulness – You gain Mining Fatigue 1 in sunlight.
+                    if (tags.contains("Hypnotic") && player.getWorld().isDayTime()) {
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, 20, 0));
+                    }
                 }
             }
         }.runTaskTimer(this, 0, 3);
@@ -486,5 +547,9 @@ public final class NatureSMP extends JavaPlugin {
 
     public void delay(Runnable task, long delayTicks) {
         getServer().getScheduler().runTaskLater(this, task, delayTicks);
+    }
+
+    public EntrailSwapper getEntrailSwapper() {
+        return new EntrailSwapper();
     }
 }

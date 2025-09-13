@@ -1,6 +1,7 @@
 package com.itsisaacio.natureSMP.commands;
 
 import com.itsisaacio.natureSMP.NatureSMP;
+import com.itsisaacio.natureSMP.PhaseManager;
 import com.itsisaacio.natureSMP.custom.EnergizingPedestal;
 import com.itsisaacio.natureSMP.custom.Energizer;
 import com.itsisaacio.natureSMP.custom.EnergyCore;
@@ -16,6 +17,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
@@ -49,8 +52,8 @@ public class CommandHandler implements TabCompleter, CommandExecutor {
             } else if (cmdName.equals("energy")) {
                 player.sendMessage(
                         "You have §b" +
-                        player.getPersistentDataContainer().getOrDefault(Keys.energyKey, PersistentDataType.INTEGER, 3)
-                        + " energy!");
+                                player.getPersistentDataContainer().getOrDefault(Keys.energyKey, PersistentDataType.INTEGER, 3)
+                                + " energy!");
             } else if (cmdName.equals("stat") && player.isOp()) {
                 if (args.length >= 2)
                 {
@@ -64,8 +67,37 @@ public class CommandHandler implements TabCompleter, CommandExecutor {
             {
                 Player applied = args.length == 1 ? Bukkit.getServer().getPlayer(args[0]) : player;
                 if (applied == null) return true;
+            } else if (cmdName.equals("phase")) {
+                if (args.length == 1) {
+                    try {
+                        int phase = Integer.parseInt(args[0]);
+                        PhaseManager.startPhase(phase);
+                        player.sendMessage("§aStarted Phase " + phase + "!");
+                    } catch (NumberFormatException e) {
+                        player.sendMessage("§cInvalid phase number!");
+                    }
+                } else if (args[0].equalsIgnoreCase("start") && args.length == 2) {
+                    try {
+                        int phase = Integer.parseInt(args[1]);
+                        if (phase < 1) {
+                            player.sendMessage("§cPhase must be 1 or higher!");
+                            return true;
+                        }
 
-                EntrailSwapper.randomize(applied);
+                        PhaseManager.startPhase(phase);
+                        player.sendMessage("§aStarted Phase " + phase + "!");
+                        return true;
+                    } catch (NumberFormatException e) {
+                        player.sendMessage("§cInvalid phase number!");
+                        return true;
+                    }
+                } else if (args[0].equalsIgnoreCase("item")) {
+                    // Handle phase item command
+                    PhaseItemCommand itemCommand = new PhaseItemCommand();
+                    return itemCommand.onCommand(sender, command, label, args);
+                }
+
+                //EntrailSwapper.randomize(applied); // This line seems out of place here, consider its context.
             } else if (cmdName.equals("cooldown_reload") && player.isOp()) {
                 NatureSMP.COOLDOWNS.WAITING.clear();
                 NatureSMP.COOLDOWNS.USING.clear();
@@ -117,49 +149,67 @@ public class CommandHandler implements TabCompleter, CommandExecutor {
     }
 
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String @NotNull [] args){
-        List<String> list = new ArrayList<>();
-        int playerList = -1;
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String @NotNull [] args){
+        List<String> suggestions = new ArrayList<>();
+        int playerListIndex = -1;
 
         if (sender instanceof Player player && player.isOp())
         {
             if(command.getName().equalsIgnoreCase("entrail")) {
                 if (args.length == 1) {
                     for (BaseEntrail mob : EntrailList.entrails)
-                        list.add(mob.getName().replace(" ", ""));
-                    list = getAutofill(args, 0, list);
+                        suggestions.add(mob.getName().replace(" ", ""));
+                    suggestions = getAutofill(args, 0, suggestions);
                 } else if (args.length == 2)
-                    playerList = 1;
+                    playerListIndex = 1;
             }
             else if (command.getName().equalsIgnoreCase("reroll")) {
                 if (args.length == 1)
-                    playerList = 0;
+                    playerListIndex = 0;
             }
             else if (command.getName().equalsIgnoreCase("stat")) {
                 if (args.length == 1) {
                     for (Statistic value : Statistic.values())
-                        list.add(value.name());
-                    list = getAutofill(args, 0, list);
+                        suggestions.add(value.name());
+                    suggestions = getAutofill(args, 0, suggestions);
                 } else if (args.length == 2)
-                    list.add("<value>");
+                    suggestions.add("<value>");
                 else if (args.length == 3)
-                    playerList = 2;
+                    playerListIndex = 2;
             }
             else if (command.getName().equalsIgnoreCase("give_item"))
             {
                 if (args.length == 1) {
-                    list.add("Swapper");
-                    list.add("EnergyCore");
-                    list.add("Energizer");
-                    list.add("EnergizingPedestal");
-                    list = getAutofill(args, 0, list);
+                    suggestions.add("Swapper");
+                    suggestions.add("EnergyCore");
+                    suggestions.add("Energizer");
+                    suggestions.add("EnergizingPedestal");
+                    suggestions = getAutofill(args, 0, suggestions);
+                }
+            }
+            else if (command.getName().equalsIgnoreCase("phase")) {
+                if (args.length == 1) {
+                    if ("start".startsWith(args[0].toLowerCase())) {
+                        suggestions.add("start");
+                    }
+                    if ("item".startsWith(args[0].toLowerCase())) {
+                        suggestions.add("item");
+                    }
+                } else if (args.length == 2 && args[0].equalsIgnoreCase("start")) {
+                    suggestions.add("1");
+                    suggestions.add("2");
+                    suggestions.add("3");
+                } else if (args[0].equalsIgnoreCase("item")) {
+                    // Handle phase item tab completion
+                    PhaseItemCommand itemCommand = new PhaseItemCommand();
+                    return itemCommand.onTabComplete(sender, command, alias, args);
                 }
             }
         }
 
-        if (playerList >= 0)
-            list = getAutofill(args, playerList, null);
+        if (playerListIndex >= 0)
+            suggestions = getAutofill(args, playerListIndex, null);
 
-        return list;
+        return suggestions;
     }
 }

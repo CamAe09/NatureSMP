@@ -44,7 +44,7 @@ public class Ethereal extends BaseEntrail {
     @Override
     public ArrayList<String> getLore() {
         return new ArrayList<>() {{
-            add("§f  " + getColor() + getAbilities().getFirst());
+            add("§f  " + getColor() + getAbilities().get(0));
             add("§f  Gives §cplayers §caround you §bGlowing§f, and gives you");
             add("§b  Strength §a2 §fand §bSpeed §a3 §ffor §a15 §fseconds§f.");
             add("");
@@ -73,7 +73,11 @@ public class Ethereal extends BaseEntrail {
         {
             player.sendMessage(getColor() + getAbilities().get(type) + Players.cooldownText(player, type));
             return;
-        };
+        }
+
+        if (!checkPhase1Restriction(player, type)) {
+            return;
+        }
 
         if (type == 0) {
             Players.setCooldown(player, type, 999999999, true);
@@ -128,7 +132,7 @@ public class Ethereal extends BaseEntrail {
 
                         if (loops++ >= (20f / delay * duration) || !target.isValid() || target.isDead() || (loops > 4 && target.isOnGround())) {
                             target.getWorld().spawnParticle(Particle.DUST_PLUME, target.getLocation(), 50, 2, 1, 2, 0.01);
-                            target.getWorld().playSound(target.getLocation(), Sound.ITEM_MACE_SMASH_GROUND_HEAVY, 0.5f, 1);
+                            target.getWorld().playSound(target.getLocation(), Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
 
                             NatureSMP.ON_SHUTDOWN.remove(reset);
                             reset.run();
@@ -141,7 +145,7 @@ public class Ethereal extends BaseEntrail {
             Players.setCooldown(player, type, 80, false);
             player.sendMessage("You have used " + getColor() + getAbilities().get(type) + "§f!");
             player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BAT_TAKEOFF, 1.0f, 1.0f);
-            player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 100, 2));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.JUMP_BOOST, 60, 2));
 
             int delay = 1;
             int duration = 5;
@@ -196,5 +200,10 @@ public class Ethereal extends BaseEntrail {
                 }
             }.runTaskTimer(NatureSMP.NATURE, 0, delay);
         }
+    }
+
+    @Override
+    public void secondary(Player player) {
+        if (checkPhase1Restriction(player, 2)) return;
     }
 }

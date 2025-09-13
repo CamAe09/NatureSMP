@@ -8,33 +8,39 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class Energizer {
-    public static NamespacedKey itemKey = new NamespacedKey(NatureSMP.NATURE, "recharger");
+    private static final NamespacedKey ITEM_KEY = new NamespacedKey(NatureSMP.NATURE, "recharger");
 
-    public static NamespacedKey getKey()
-    {
-        return itemKey;
+    public static NamespacedKey getKey() {
+        return ITEM_KEY;
     }
 
     public static ItemStack getItem() {
-        ItemStack item = ItemStack.of(Material.WARPED_FUNGUS_ON_A_STICK);
+        // ✅ Use proper constructor, not ItemStack.of or ItemStack.empty
+        ItemStack item = new ItemStack(Material.WARPED_FUNGUS_ON_A_STICK, 1);
+
         ItemMeta meta = item.getItemMeta();
-        //meta.setItemModel(NamespacedKey.fromString("naturesmp:recharger"));
-        meta.setItemModel(NamespacedKey.minecraft("ominous_trial_key"));
-        meta.setCustomModelData(1);
-        meta.setEnchantmentGlintOverride(true);
+        if (meta != null) {
+            // ✅ 1.21+ custom model hook
+            // Use your own if you have a resource pack, e.g. NamespacedKey.fromString("naturesmp:recharger")
+            meta.setItemModel(NamespacedKey.minecraft("ominous_trial_key"));
 
-        meta.setDisplayName("§bᴇɴᴇʀɢɪᴢᴇʀ");
-        meta.setLore(new ArrayList<>(){{
-            add("§fWhen dropped onto the §bEnergizing Pedestal§f, starts an §aenergizing ritual§f.");
-        }});
+            meta.setCustomModelData(1);
+            meta.setEnchantmentGlintOverride(true);
 
-        PersistentDataContainer data = meta.getPersistentDataContainer();
-        data.set(itemKey, PersistentDataType.BOOLEAN, true);
+            meta.setDisplayName("§bᴇɴᴇʀɢɪᴢᴇʀ");
+            meta.setLore(List.of(
+                    "§fWhen dropped onto the §bEnergizing Pedestal§f, starts an §aenergizing ritual§f."
+            ));
 
-        item.setItemMeta(meta);
+            // ✅ persistent data flag
+            PersistentDataContainer data = meta.getPersistentDataContainer();
+            data.set(ITEM_KEY, PersistentDataType.BOOLEAN, true);
+
+            item.setItemMeta(meta);
+        }
 
         return item;
     }

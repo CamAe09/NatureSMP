@@ -11,7 +11,6 @@ import com.itsisaacio.natureSMP.Keys;
 import com.itsisaacio.natureSMP.utils.Particles;
 import com.itsisaacio.natureSMP.utils.Players;
 import com.itsisaacio.natureSMP.utils.Utilities;
-import io.papermc.paper.persistence.PersistentDataContainerView;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -226,8 +225,12 @@ public class EntrailEvents implements Listener {
         ProjectileSource shooter = entity.getShooter();
         if (shooter == null) return;
 
-        if (shooter instanceof Player player && player.getScoreboardTags().contains("Ethereal") && entity.getType() == EntityType.WIND_CHARGE)
-            player.heal(2, EntityRegainHealthEvent.RegainReason.MAGIC_REGEN);
+        if (shooter instanceof Player player && player.getScoreboardTags().contains("Ethereal") && entity.getType() == EntityType.WIND_CHARGE) {
+            EntityRegainHealthEvent healEvent = new EntityRegainHealthEvent(player, 2, EntityRegainHealthEvent.RegainReason.MAGIC_REGEN);
+            if (!healEvent.isCancelled()) {
+                player.setHealth(Math.min(player.getHealth() + healEvent.getAmount(), player.getMaxHealth()));
+            }
+        }
     }
 
     @EventHandler
@@ -258,7 +261,7 @@ public class EntrailEvents implements Listener {
                 event.getClickedBlock().getRelative(event.getBlockFace()).setType(Material.WATER);
             }
         } else if (event.getAction().isRightClick()) {
-            PersistentDataContainerView data = item.getPersistentDataContainer();
+            PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
 
             if (data.has(Swapper.getKey()))
                 Swapper.interact(player, item);

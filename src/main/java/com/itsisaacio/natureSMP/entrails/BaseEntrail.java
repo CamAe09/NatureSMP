@@ -1,8 +1,12 @@
 package com.itsisaacio.natureSMP.entrails;
 
+import com.itsisaacio.natureSMP.Keys;
+import com.itsisaacio.natureSMP.PhaseManager;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 import org.intellij.lang.annotations.Subst;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 
@@ -33,4 +37,22 @@ public abstract class BaseEntrail {
     public abstract ArrayList<String> getPassive();
 
     public abstract void perform(Player player, int type);
+
+    public abstract void secondary(Player player);
+
+    protected boolean isPhase1Active() {
+        return PhaseManager.isPhaseActive() && PhaseManager.getCurrentPhase() == 1;
+    }
+
+    protected boolean checkPhase1Restriction(Player player, int energyCost) {
+        if (PhaseManager.getCurrentPhase() == 1) {
+            // Give energy back
+            int currentEnergy = player.getPersistentDataContainer().getOrDefault(Keys.energyKey, PersistentDataType.INTEGER, 0);
+            player.getPersistentDataContainer().set(Keys.energyKey, PersistentDataType.INTEGER, currentEnergy + energyCost);
+
+            player.sendMessage("§cYou Are Not Allowed To Use This During Phase 1");
+            return true; // Blocked
+        }
+        return false; // Not blocked
+    }
 }

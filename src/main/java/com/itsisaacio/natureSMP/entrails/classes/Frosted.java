@@ -11,6 +11,8 @@ import org.bukkit.*;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -43,7 +45,7 @@ public class Frosted extends BaseEntrail {
     @Override
     public ArrayList<String> getLore() {
         return new ArrayList<>() {{
-            add("§f  " + getColor() + getAbilities().getFirst());
+            add("§f  " + getColor() + getAbilities().get(0));
             add("§f  Gives §cplayers §caround you §bGlowing§f, and gives you");
             add("§b  Strength §a2 §fand §bSpeed §a3 §ffor §a15 §fseconds§f.");
             add("");
@@ -74,7 +76,11 @@ public class Frosted extends BaseEntrail {
         {
             player.sendMessage(getColor() + getAbilities().get(type) + Players.cooldownText(player, type));
             return;
-        };
+        }
+
+        if (!checkPhase1Restriction(player, type)) {
+            return;
+        }
 
         if (type == 0) {
             Players.setCooldown(player, type, 30, false);
@@ -113,10 +119,10 @@ public class Frosted extends BaseEntrail {
                         entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, 1, 1);
 
                         if (entity instanceof Player && trusted.contains(entity)) {
-                            entity.addPotionEffect(PotionEffectType.SPEED.createEffect(100, 2));
+                            entity.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 100, 0));
                         } else {
                             Players.trueDamage(entity, player, 5);
-                            entity.addPotionEffect(PotionEffectType.SLOWNESS.createEffect(100, 2));
+                            entity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 200, 1));
                         }
                         entity.sendMessage("You have been affected with " + getColor() + getAbilities().get(type) + "§fby " + player.getName() + "§f!");
 
@@ -160,5 +166,10 @@ public class Frosted extends BaseEntrail {
                 }
             }.runTaskTimer(NatureSMP.NATURE, 0, delay);
         }
+    }
+
+    @Override
+    public void secondary(Player player) {
+        if (checkPhase1Restriction(player, 2)) return;
     }
 }

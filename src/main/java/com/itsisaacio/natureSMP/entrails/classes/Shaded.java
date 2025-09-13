@@ -11,6 +11,7 @@ import com.itsisaacio.natureSMP.utils.Utilities;
 import org.bukkit.*;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.*;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -47,9 +48,9 @@ public class Shaded extends BaseEntrail {
     @Override
     public ArrayList<String> getLore() {
         return new ArrayList<>() {{
-            add("§f  " + getColor() + getAbilities().getFirst());
+            add("§f  " + getColor() + getAbilities().get(0));
             add("§f  Gives §cplayers §caround you §bGlowing§f, and gives you");
-            add("§b  Strength §a2 §fand §bSpeed §a3 §ffor §a15 §fseconds§f.");
+            add("§b  Strength §a2 §fand §bSpeed §a3 §ffor §a15 §seconds§f.");
             add("");
             add("§f  " + getColor() + getAbilities().get(1));
             add("§f  You take §bno damage §ffor the next §a4 §ehits §fagainst you.");
@@ -66,7 +67,7 @@ public class Shaded extends BaseEntrail {
     @Override
     public Effect[] getEffects() {
         return new Effect[] {
-                new Effect(PotionEffectType.WEAVING, 0),
+                new Effect(PotionEffectType.INVISIBILITY, 0),
         };
     }
 
@@ -89,7 +90,11 @@ public class Shaded extends BaseEntrail {
         {
             player.sendMessage(getColor() + getAbilities().get(type) + Players.cooldownText(player, type));
             return;
-        };
+        }
+
+        if (!checkPhase1Restriction(player, type)) {
+            return;
+        }
 
         if (type == 0) {
             Players.setCooldown(player, type, 15, true);
@@ -196,7 +201,7 @@ public class Shaded extends BaseEntrail {
 
                     Location location = player.getLocation().add(0, 0.5, 0);
                     Particles.sphere(location, 5, 0, 20, 0, 0, alt -> {
-                        location.getWorld().spawnParticle(Particle.WITCH, location, 2, 0.2, 0.2, 0.2, 0.001);
+                        location.getWorld().spawnParticle(Particle.HAPPY_VILLAGER, location, 2, 0.2, 0.2, 0.2, 0.001);
                         return true;
                     });
                     for (LivingEntity entity : player.getLocation().getNearbyLivingEntities(5)) {
@@ -210,5 +215,10 @@ public class Shaded extends BaseEntrail {
                 }
             }.runTaskTimer(NatureSMP.NATURE, 0, delay);
         }
+    }
+
+    @Override
+    public void secondary(Player player) {
+        if (checkPhase1Restriction(player, 2)) return;
     }
 }

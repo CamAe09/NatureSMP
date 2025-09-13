@@ -11,6 +11,7 @@ public class EntrailList {
         add(new Naturen());
         add(new Shaded());
         add(new Ethereal());
+        add(new Hypnotic());
     }};
 }
 

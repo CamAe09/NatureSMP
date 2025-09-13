@@ -19,6 +19,8 @@ import java.util.Collection;
 import java.util.UUID;
 
 public class Players {
+    private static boolean using;
+
     public static boolean onCooldown(Player player, int type)
     {
         PersistentDataContainer data = player.getPersistentDataContainer();
@@ -26,7 +28,7 @@ public class Players {
                 || data.getOrDefault(Keys.energyKey, PersistentDataType.INTEGER, 3) < type;
     }
 
-    public static void setCooldown(Player player, int type, int time, boolean using)
+    public static void setCooldown(Player player, int type, int time, boolean b)
     {
         int reduction = 1;
         NatureSMP.COOLDOWNS.setCooldown(type, player, time / reduction, using);
